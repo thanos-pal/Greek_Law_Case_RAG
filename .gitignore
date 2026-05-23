@@ -1,0 +1,6 @@
+__pycache__/
+.env
+data/processed/
+myenv/
+.mypy_cache/
+.ruff_cache/
