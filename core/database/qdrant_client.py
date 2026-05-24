@@ -9,7 +9,6 @@ from qdrant_client.models import (
     Distance,
     VectorParams,
     PointStruct,
-    Filter,
     OptimizersConfigDiff,
     HnswConfigDiff,
     CollectionInfo,
@@ -125,19 +124,17 @@ class QdrantManager:
         self,
         query_vector: List[float],
         limit: int = 10,
-        query_filter: Optional[Filter] = None,
         with_payload: bool = True,
         with_vectors: bool = False,
         score_threshold: Optional[float] = None,
     ) -> List[SearchPoint]:
-        """Perform vector search with optional filtering."""
+        """Perform vector search"""
         try:
             start_time = time.time()
 
             search_result = self.client.search(
                 collection_name=self.collection_name,
                 query_vector=query_vector,
-                query_filter=query_filter,
                 limit=limit,
                 with_payload=with_payload,
                 with_vectors=with_vectors,
@@ -183,19 +180,19 @@ class QdrantManager:
             self.logger.error(f"Error deleting points: {e}")
             return False
 
-    def count_points(self, count_filter: Optional[Filter] = None) -> int:
-        """Count points in the collection with optional filtering."""
-        try:
-            count_result = self.client.count(
-                collection_name=self.collection_name,
-                count_filter=count_filter,
-                exact=True,
-            )
-            return count_result.count
+    # def count_points(self, count_filter: Optional[Filter] = None) -> int:
+    #     """Count points in the collection with optional filtering."""
+    #     try:
+    #         count_result = self.client.count(
+    #             collection_name=self.collection_name,
+    #             count_filter=count_filter,
+    #             exact=True,
+    #         )
+    #         return count_result.count
 
-        except Exception as e:
-            self.logger.error(f"Error counting points: {e}")
-            return 0
+    #     except Exception as e:
+    #         self.logger.error(f"Error counting points: {e}")
+    #         return 0
 
     def scroll_points(
         self,
@@ -235,7 +232,7 @@ class QdrantManager:
     def create_payload_index(
         self, field_name: str, field_type: str = "keyword"
     ) -> bool:
-        """Create an index on a payload field for faster filtering."""
+        """Create an index on a payload field."""
         try:
             self.client.create_payload_index(
                 collection_name=self.collection_name,

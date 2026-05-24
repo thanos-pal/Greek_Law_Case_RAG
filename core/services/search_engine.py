@@ -6,8 +6,7 @@ with traditional keyword matching for superior retrieval accuracy.
 
 """
 
-from qdrant_client.models import Filter, FieldCondition, Range, MatchValue
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Optional
 import logging
 import time
 import re
@@ -90,7 +89,6 @@ class HybridSearchEngine:
         limit: int = 10,
         vector_weight: Optional[float] = None,
         keyword_weight: Optional[float] = None,
-        filters: Optional[Dict[str, Any]] = None,
     ) -> List[SearchResult]:
         """Perform hybrid search with weighted score combination."""
         start_time = time.time()
@@ -110,14 +108,10 @@ class HybridSearchEngine:
         )
         query_vector = query_embedding_result.embedding
 
-        # Prepare Qdrant filter
-        qdrant_filter = self.build_filter(filters) if filters else None
-
         # Perform vector search with expanded limit for reranking
         vector_results = self.qdrant.search(
             query_vector=query_vector,
             limit=limit * 3,  # Get more results for reranking
-            query_filter=qdrant_filter,
             with_payload=True,
             with_vectors=False,
             score_threshold=0.1,  # Low threshold for initial retrieval
@@ -152,44 +146,6 @@ class HybridSearchEngine:
             result.rank = i + 1
 
         return final_results
-
-    def build_filter(self, filters: Dict[str, Any]) -> Filter:
-        """Build Qdrant filters from simple dictionary."""
-        conditions = []
-
-        for key, value in filters.items():
-            if isinstance(value, dict):
-                # Range filter: {"price": {"gte": 100, "lte": 500}}
-                if "gte" in value or "lte" in value:
-                    conditions.append(
-                        FieldCondition(
-                            key=f"metadata.{key}",
-                            range=Range(gte=value.get("gte"), lte=value.get("lte")),
-                        )
-                    )
-                # List filter: {"category": {"in": ["tech", "business"]}}
-                elif "in" in value:
-                    # Create OR conditions for list items
-                    list_conditions = []
-                    for item in value["in"]:
-                        list_conditions.append(
-                            FieldCondition(
-                                key=f"metadata.{key}", match=MatchValue(value=item)
-                            )
-                        )
-                    # Add as OR conditions (should)
-                    if list_conditions:
-                        if len(list_conditions) == 1:
-                            conditions.append(list_conditions[0])
-                        else:
-                            conditions.append(Filter(should=list_conditions))
-            else:
-                # Exact match filter
-                conditions.append(
-                    FieldCondition(key=f"metadata.{key}", match=MatchValue(value=value))
-                )
-
-        return Filter(must=conditions) if conditions else None
 
     def calculate_keyword_scores(
         self, query_analysis: SearchQuery, vector_results: List[SearchPoint]

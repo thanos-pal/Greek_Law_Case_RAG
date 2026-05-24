@@ -5,8 +5,8 @@ This module provides high-level document operations including ingestion,
 retrieval, and management with automatic embedding generation and metadata handling.
 """
 
-from typing import List, Dict, Any, Optional
-from qdrant_client.models import PointStruct, Filter, FieldCondition, Range, MatchValue
+from typing import List, Optional
+from qdrant_client.models import PointStruct
 import uuid
 import logging
 import hashlib
@@ -232,20 +232,16 @@ class DocumentStore:
         self,
         query_vector: List[float],
         limit: int = 10,
-        filters: Optional[Dict[str, Any]] = None,
         include_chunks: bool = True,
         score_threshold: Optional[float] = None,
     ) -> List[SearchPoint]:
         """Search documents using vector similarity."""
         try:
-            # Build filter
-            qdrant_filter = self.build_filter(filters) if filters else None
 
             # Perform search
             results = self.qdrant.search(
                 query_vector=query_vector,
                 limit=limit,
-                query_filter=qdrant_filter,
                 with_payload=True,
                 score_threshold=score_threshold,
             )
@@ -262,25 +258,6 @@ class DocumentStore:
             self.logger.error(f"Error searching documents: {e}")
             return []
 
-    def get_document_count(self, filters: Optional[Dict[str, Any]] = None) -> int:
-        """Get total number of documents (main documents only)."""
-        try:
-            # Build filter for main documents only
-            main_doc_filter = Filter(
-                must=[{"key": "document_type", "match": {"value": "main"}}]
-            )
-
-            if filters:
-                additional_filter = self.build_filter(filters)
-                if additional_filter:
-                    main_doc_filter.must.extend(additional_filter.must or [])
-
-            return self.qdrant.count_points(main_doc_filter)
-
-        except Exception as e:
-            self.logger.error(f"Error counting documents: {e}")
-            return 0
-
     def generate_document_id(self, description: str) -> str:
         """Generate a unique document ID as a valid UUID."""
         return str(uuid.uuid5(uuid.NAMESPACE_DNS, description))
@@ -288,36 +265,3 @@ class DocumentStore:
     def hash_content(self, description: str) -> str:
         """Generate a hash of the content for deduplication."""
         return hashlib.sha256(description.encode()).hexdigest()
-
-    def build_filter(self, filters: Dict[str, Any]) -> Optional[Filter]:
-        """Build Qdrant filter from dictionary."""
-        if not filters:
-            return None
-
-        conditions = []
-
-        for key, value in filters.items():
-            if isinstance(value, dict):
-                # Range filter
-                if "gte" in value or "lte" in value:
-                    conditions.append(
-                        FieldCondition(
-                            key=f"metadata.{key}",
-                            range=Range(gte=value.get("gte"), lte=value.get("lte")),
-                        )
-                    )
-                # List filter
-                elif "in" in value:
-                    for item in value["in"]:
-                        conditions.append(
-                            FieldCondition(
-                                key=f"metadata.{key}", match=MatchValue(value=item)
-                            )
-                        )
-            else:
-                # Exact match
-                conditions.append(
-                    FieldCondition(key=f"metadata.{key}", match=MatchValue(value=value))
-                )
-
-        return Filter(must=conditions) if conditions else None
