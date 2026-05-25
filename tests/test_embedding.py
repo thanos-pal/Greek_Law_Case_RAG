@@ -11,11 +11,12 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 import json
 from typing import List
-from core.config.settings import Settings
-from core.services.embedding_service import EmbeddingService
 
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
+
+from core.config.settings import Settings
+from core.services.embedding_service import EmbeddingService
 
 # Initialize system components
 settings = Settings()

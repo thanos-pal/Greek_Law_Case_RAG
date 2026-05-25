@@ -1,6 +1,6 @@
 """Data models."""
 
 from .document import Document, DocumentMetadata
-from .search_result import SearchResult, ResponseAnalysis
+from .search_result import SearchResult
 
-__all__ = ["Document", "DocumentMetadata", "SearchResult", "ResponseAnalysis"]
+__all__ = ["Document", "DocumentMetadata", "SearchResult"]

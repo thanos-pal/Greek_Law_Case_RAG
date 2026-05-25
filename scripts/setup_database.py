@@ -10,16 +10,16 @@ import sys
 import logging
 import argparse
 from pathlib import Path
+
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
+
 from core.config.settings import Settings
 from core.database.qdrant_client import QdrantManager
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.panel import Panel
 from rich.table import Table
-
-# Add the project root to the Python path
-project_root = Path(__file__).parent.parent
-sys.path.insert(0, str(project_root))
 
 
 def setup_logging(log_level: str = "INFO"):
@@ -115,7 +115,7 @@ def main():
             status_table.add_row(
                 "Collection",
                 (
-                    f"✅ Exists ({collection_info.vectors_count} vectors)"
+                    f"✅ Exists ({collection_info.indexed_vectors_count} vectors)"
                     if collection_exists
                     else "❌ Not found"
                 ),
@@ -180,7 +180,7 @@ def main():
 
         else:
             console.print(
-                f"\n✅ Collection already exists with {collection_info.vectors_count} vectors"
+                f"\n✅ Collection already exists with {collection_info.indexed_vectors_count} vectors"
             )
 
         # Final status check
@@ -191,7 +191,7 @@ def main():
         summary_table.add_column("Value", style="green")
 
         summary_table.add_row("Collection Name", settings.qdrant_collection_name)
-        summary_table.add_row("Vector Count", str(final_info.vectors_count))
+        summary_table.add_row("Vector Count", str(final_info.indexed_vectors_count))
         summary_table.add_row("Vector Size", str(final_info.config.params.vectors.size))
         summary_table.add_row(
             "Distance Metric", str(final_info.config.params.vectors.distance)

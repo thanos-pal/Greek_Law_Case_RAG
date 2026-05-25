@@ -15,6 +15,11 @@ import argparse
 from pathlib import Path
 from typing import List, Dict, Any
 import time
+
+# Add the project root to the Python path
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
+
 from core.config.settings import Settings
 from core.database.qdrant_client import QdrantManager
 from core.database.document_store import DocumentStore
@@ -24,10 +29,6 @@ from rich.console import Console
 from rich.progress import Progress, TaskID
 from rich.table import Table
 from rich.panel import Panel
-
-# Add the project root to the Python path
-project_root = Path(__file__).parent.parent
-sys.path.insert(0, str(project_root))
 
 
 def setup_logging(log_level: str = "INFO"):

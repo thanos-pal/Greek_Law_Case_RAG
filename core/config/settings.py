@@ -80,7 +80,7 @@ class Settings(BaseSettings):
     @property
     def qdrant_url(self) -> str:
         """Get the full Qdrant URL."""
-        return f"http://{self.qdrant_host}:{self.qdrant_port}"
+        return f"https://{self.qdrant_host}:{self.qdrant_port}"
 
     @property
     def is_production(self) -> bool:

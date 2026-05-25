@@ -4,15 +4,10 @@ Streamlit frontend for RAG-based legal document retrieval
 
 import streamlit as st
 import asyncio
-import sys
-from pathlib import Path
 from core.config.settings import Settings
 from core.database.qdrant_client import QdrantManager
 from core.services.embedding_service import EmbeddingService
 from core.services.search_engine import HybridSearchEngine
-
-project_root = Path(__file__).parent.parent
-sys.path.insert(0, str(project_root))
 
 # Page config
 st.set_page_config(

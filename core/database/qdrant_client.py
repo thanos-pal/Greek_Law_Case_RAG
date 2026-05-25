@@ -36,9 +36,12 @@ class QdrantManager:
         """Initialize Qdrant manager with settings."""
         self.settings = settings
         self.client = QdrantClient(
+            # Use url for cloud
+            # url=settings.qdrant_url,
             host=settings.qdrant_host,
             port=settings.qdrant_port,
-            # api_key=settings.qdrant_api_key
+            # api_key=settings.qdrant_api_key,
+            check_compatibility=False,
         )
         self.collection_name = settings.qdrant_collection_name
         self.vector_size = 1536  # OpenAI text-embedding-3-small dimensions
@@ -91,10 +94,10 @@ class QdrantManager:
     def get_collection_info(self) -> Optional[CollectionInfo]:
         """Get information about the collection."""
         try:
-            return self.client.get_collections(self.collection_name)
+            return self.client.get_collection(self.collection_name)
         except Exception as e:
             self.logger.error(f"Error getting collection info: {e}")
-            return None
+            raise
 
     def upsert_points(self, points: List[PointStruct], batch_size: int = 100) -> bool:
         """Upsert points in batches for optimal performance."""
@@ -132,14 +135,16 @@ class QdrantManager:
         try:
             start_time = time.time()
 
-            search_result = self.client.search(
+            search_response = self.client.query_points(
                 collection_name=self.collection_name,
-                query_vector=query_vector,
+                query=query_vector,
                 limit=limit,
                 with_payload=with_payload,
                 with_vectors=with_vectors,
                 score_threshold=score_threshold,
             )
+
+            search_result = search_response.points
 
             search_time = time.time() - start_time
             self.logger.debug(
@@ -179,20 +184,6 @@ class QdrantManager:
         except Exception as e:
             self.logger.error(f"Error deleting points: {e}")
             return False
-
-    # def count_points(self, count_filter: Optional[Filter] = None) -> int:
-    #     """Count points in the collection with optional filtering."""
-    #     try:
-    #         count_result = self.client.count(
-    #             collection_name=self.collection_name,
-    #             count_filter=count_filter,
-    #             exact=True,
-    #         )
-    #         return count_result.count
-
-    #     except Exception as e:
-    #         self.logger.error(f"Error counting points: {e}")
-    #         return 0
 
     def scroll_points(
         self,
