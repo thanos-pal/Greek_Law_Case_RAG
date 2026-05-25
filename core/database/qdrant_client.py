@@ -37,10 +37,11 @@ class QdrantManager:
         self.settings = settings
         self.client = QdrantClient(
             # Use url for cloud
-            # url=settings.qdrant_url,
-            host=settings.qdrant_host,
-            port=settings.qdrant_port,
-            # api_key=settings.qdrant_api_key,
+            url=settings.qdrant_url,
+            # Use locally
+            # host=settings.qdrant_host,
+            # port=settings.qdrant_port,
+            api_key=settings.qdrant_api_key,
             check_compatibility=False,
         )
         self.collection_name = settings.qdrant_collection_name
