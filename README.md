@@ -53,6 +53,7 @@ graph TB
     C --> D[Vector Search]
     C --> E[Keyword Search]
     D --> F[Qdrant Vector DB]
+    E --> F
     F --> J[Structured Response]
 
     style F fill:#ff6b6b
