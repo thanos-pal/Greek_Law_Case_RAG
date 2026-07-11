@@ -11,6 +11,8 @@ Existing Greek case law databases are notoriously slow, outdated, and rely on ri
 ## 💡 The Solution: A RAG-Powered Legal Vector Database
 
 **GreekLawCase-RAG** bridges the gap between outdated Greek legal infrastructure and modern AI capabilities. By replacing traditional databases with a vector database and a RAG pipeline, it enables semantic search across thousands of Greek legal cases.
+Law case data was scraped from two known puclic legal databases (https://www.dsanet.gr/Epikairothta/Nomologia/nomologia-latest.html and https://www.areiospagos.gr/nomologia/apofaseis.asp)
+
 
 ### 🚀 How It Solves the Problem?
 - **⚙️ Production-Ready**: Docker containerization for enterprise-scale workloads
