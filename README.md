@@ -4,6 +4,10 @@
 
 Existing Greek case law databases are notoriously slow, outdated, and rely on rigid, exact-match keyword searches. This creates a massive inefficiency: finding semantically similar precedents takes hours of manual filtering through clunky interfaces. This not only wastes valuable time but increases the risk of missing crucial, relevant law cases.
 
+![alt text](data/input_query.png)
+
+![alt text](data/search_result.png)
+
 ## 💡 The Solution: A RAG-Powered Legal Vector Database
 
 **GreekLawCase-RAG** bridges the gap between outdated Greek legal infrastructure and modern AI capabilities. By replacing traditional databases with a vector database and a RAG pipeline, it enables semantic search across thousands of Greek legal cases.
@@ -94,3 +98,27 @@ Building a RAG system for a highly specific and complex domain like Greek jurisp
 - OpenAI API Key
 
 ### 🚀 Getting Started - Installation
+
+```bash
+# 1️⃣ Clone the repository
+git clone https://github.com/thanos-pal/Greek_Law_Case_RAG.git
+cd Greek_Law_Case_RAG
+
+# 2️⃣ Set up environment
+cp .env.example .env
+# Put your OpenAI API key inside .env file
+
+# 3️⃣ Start services
+docker-compose up -d
+
+# 4️⃣ Install dependencies
+pip install -r requirements.txt
+
+# 5️⃣ Initialize system
+python scripts/setup_database.py
+python scripts/ingest_documents.py --create-sample
+
+# 6️⃣ Start app
+python -m streamlit run app.py
+# or streamlit run app.py
+```
