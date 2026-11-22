@@ -39,6 +39,7 @@ class QdrantManager:
             # Use locally
             host=settings.qdrant_host,
             port=settings.qdrant_port,
+            check_compatibility=False
             # api_key=settings.qdrant_api_key,
         )
         self.collection_name = settings.qdrant_collection_name

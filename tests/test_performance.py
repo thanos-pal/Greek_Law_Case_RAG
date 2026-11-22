@@ -68,7 +68,7 @@ async def analyze_search_performance(
                 vector_weight=config["vector"],
                 keyword_weight=config["keyword"],
             )
-
+            
             search_time = time.time() - start_time
 
             # Calculate metrics
@@ -118,7 +118,7 @@ def generate_recommendations(performance_df):
     return recommendations
 
 
-# Define weight configurations to test
+# # Define weight configurations to test
 weight_configs = [
     {"vector": 1.0, "keyword": 0.0},  # Pure vector search
     {"vector": 0.8, "keyword": 0.2},  # Vector-heavy
@@ -184,3 +184,4 @@ performance_df.to_csv(output_dir / "search_performance_analysis.csv", index=Fals
 print(
     f"Saved search performance analysis to {output_dir / 'search_performance_analysis.csv'}"
 )
+

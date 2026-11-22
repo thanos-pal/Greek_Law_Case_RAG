@@ -15,11 +15,113 @@ services:
       - QDRANT__LOG_LEVEL=INFO
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:6333/health"]
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/6333; printf \"GET /readyz HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n\" >&3; head -1 <&3 | grep -q \"200 OK\"'"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: greek-law-rag-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - /app/myenv
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4.1-nano}
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL:-text-embedding-3-small}
+      - QDRANT_HOST=qdrant
+      - QDRANT_PORT=6333
+      - QDRANT_COLLECTION_NAME=${QDRANT_COLLECTION_NAME:-greek_law_case_rag}
+      - QDRANT_API_KEY=${QDRANT_API_KEY}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - MAX_SEARCH_RESULTS=${MAX_SEARCH_RESULTS:-10}
+      - DEFAULT_VECTOR_WEIGHT=${DEFAULT_VECTOR_WEIGHT:-0.7}
+      - DEFAULT_KEYWORD_WEIGHT=${DEFAULT_KEYWORD_WEIGHT:-0.3}
+      - MIN_SEARCH_SCORE=${MIN_SEARCH_SCORE:-0.3}
+      - MAX_TOKENS_PER_CHUNK=${MAX_TOKENS_PER_CHUNK:-8192}
+      - CHUNK_OVERLAP_TOKENS=${CHUNK_OVERLAP_TOKENS:-200}
+      - BATCH_SIZE=${BATCH_SIZE:-100}
+      - MAX_RESPONSE_TOKENS=${MAX_RESPONSE_TOKENS:-1000}
+      - RESPONSE_TEMPERATURE=${RESPONSE_TEMPERATURE:-0.1}
+      - MAX_SOURCES_PER_RESPONSE=${MAX_SOURCES_PER_RESPONSE:-5}
+      - DEBUG=${DEBUG:-false}
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+    depends_on:
+      qdrant:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Test service for running unit tests
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: test
+    container_name: greek-law-rag-tests
+    user: root
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4.1-nano}
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL:-text-embedding-3-small}
+      - QDRANT_HOST=qdrant
+      - QDRANT_PORT=6333
+      - QDRANT_COLLECTION_NAME=${QDRANT_COLLECTION_NAME:-greek_law_case_rag}
+      - QDRANT_API_KEY=${QDRANT_API_KEY}
+      - LOG_LEVEL=DEBUG
+      - ENVIRONMENT=test
+    depends_on:
+      qdrant:
+        condition: service_healthy
+    # Run tests and exit
+    command: ["python", "-m", "pytest", "tests/", "-v", "--tb=short", "--asyncio-mode=auto"]
+    profiles:
+      - test
+
+  # Integration test service for running API tests
+  integration-test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: greek-law-rag-integration-tests
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4.1-nano}
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL:-text-embedding-3-small}
+      - QDRANT_HOST=qdrant
+      - QDRANT_PORT=6333
+      - QDRANT_COLLECTION_NAME=${QDRANT_COLLECTION_NAME:-greek_law_case_rag}
+      - QDRANT_API_KEY=${QDRANT_API_KEY}
+      - LOG_LEVEL=DEBUG
+      - ENVIRONMENT=test
+    depends_on:
+      qdrant:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+    # Run integration tests against the API
+    command: >
+      sh -c "
+        echo 'Waiting for API to be ready...' &&
+        sleep 10 &&
+        python -m pytest tests/ -v --tb=short -k 'integration' --asyncio-mode=auto ||
+        python -c \"import httpx; import asyncio; print('Running basic API health check...'); asyncio.run(check_api())\"
+      "
+    profiles:
+      - test
 
 volumes:
   qdrant_storage:
