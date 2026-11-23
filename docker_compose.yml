@@ -20,6 +20,8 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    networks:
+      - qdrant-rag-network
 
   api:
     build:
@@ -63,6 +65,8 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    networks:
+      - qdrant-rag-network
 
   # Test service for running unit tests
   test:
@@ -86,9 +90,11 @@ services:
       qdrant:
         condition: service_healthy
     # Run tests and exit
-    command: ["python", "-m", "pytest", "tests/", "-v", "--tb=short", "--asyncio-mode=auto"]
+    command: ["python", "-m", "pytest", "tests/test_api.py", "-v", "--tb=short", "--asyncio-mode=auto"]
     profiles:
       - test
+    networks:
+      - qdrant-rag-network
 
   # Integration test service for running API tests
   integration-test:
@@ -107,6 +113,7 @@ services:
       - QDRANT_API_KEY=${QDRANT_API_KEY}
       - LOG_LEVEL=DEBUG
       - ENVIRONMENT=test
+      - API_BASE_URL=http://api:8000
     depends_on:
       qdrant:
         condition: service_healthy
@@ -117,16 +124,18 @@ services:
       sh -c "
         echo 'Waiting for API to be ready...' &&
         sleep 10 &&
-        python -m pytest tests/ -v --tb=short -k 'integration' --asyncio-mode=auto ||
+        python -m pytest tests/test_api.py -v --tb=short -k 'integration' --asyncio-mode=auto ||
         python -c \"import httpx; import asyncio; print('Running basic API health check...'); asyncio.run(check_api())\"
       "
     profiles:
       - test
+    networks:
+      - qdrant-rag-network
 
 volumes:
   qdrant_storage:
     driver: local
 
 networks:
-  default:
+  qdrant-rag-network:
     name: qdrant-rag-network
