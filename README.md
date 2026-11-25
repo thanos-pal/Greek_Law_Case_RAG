@@ -264,10 +264,9 @@ Greek_Law_Case_RAG/
 │   ├── test_embedding.py  # Embedding analysis & visualization
 │   ├── test_performance.py # Performance benchmarking
 │   └── ragas_evaluation.py # RAGAS retrieval evaluation
-├── data/                   # Data files (gitignored)
-│   ├── raw/               # Raw scraped data
-│   └── processed/         # Processed outputs
-├── memory/                 # Project documentation
+├── data/                   # Data files
+│   ├── case_data.json     # Raw scraped data
+│   └── eval_dataset.json  # Evaluation dataset
 ├── Dockerfile             # Multi-stage Docker build
 ├── docker_compose.yml     # Service orchestration
 ├── requirements.txt       # Python dependencies
